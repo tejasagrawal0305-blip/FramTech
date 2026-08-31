@@ -1,0 +1,254 @@
+/* Home Page Styles */
+
+.hero {
+  background: linear-gradient(135deg, #27ae60 0%, #1a472a 100%);
+  color: white;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.hero-content h1 {
+  color: white;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  color: #ecf0f1;
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.search-section {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.search-section input {
+  padding: 1rem;
+  font-size: 1.1rem;
+  width: 100%;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.action-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+}
+
+.action-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+.action-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.action-card h3 {
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.action-card p {
+  color: #ecf0f1;
+  margin-bottom: 1rem;
+}
+
+.action-card a {
+  color: white;
+  font-weight: 600;
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  border: 2px solid white;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.action-card a:hover {
+  background-color: white;
+  color: #27ae60;
+}
+
+/* Categories Section */
+.categories-section {
+  padding: 4rem 0;
+  background: white;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #2d5a3d;
+  margin-bottom: 3rem;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+.category-card {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.category-card:hover {
+  border-color: #27ae60;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(39, 174, 96, 0.2);
+}
+
+.category-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.category-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d5a3d;
+}
+
+/* Popular Equipment Section */
+.popular-section {
+  padding: 4rem 0;
+  background: #f5f5f5;
+}
+
+.equipment-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.showcase-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.showcase-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.showcase-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.showcase-info {
+  padding: 1.5rem;
+}
+
+.showcase-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d5a3d;
+  margin-bottom: 0.5rem;
+}
+
+.showcase-price {
+  font-size: 1.25rem;
+  color: #27ae60;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.showcase-rating {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  color: #f39c12;
+  font-size: 0.9rem;
+}
+
+.showcase-location {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.showcase-card .btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+/* Stats Section */
+.stats-section {
+  background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+  color: white;
+  padding: 3rem 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #27ae60;
+}
+
+.stat-label {
+  color: #ecf0f1;
+  margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .equipment-showcase {
+    grid-template-columns: 1fr;
+  }
+}

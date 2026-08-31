@@ -1,133 +1,99 @@
 'use client';
 
-import Link from 'next/link';
-import EquipmentCard from './components/EquipmentCard';
-import './styles/home.css';
+import { useState } from 'react';
+import EquipmentCard from '../components/EquipmentCard';
+import FilterBar from '../components/FilterBar';
+import '../styles/equipment.css';
 
-// Sample data
-const categories = [
-  { id: 1, name: 'Tractors', icon: '🚜' },
-  { id: 2, name: 'Harvesters', icon: '🌾' },
-  { id: 3, name: 'Plows', icon: '⚙️' },
-  { id: 4, name: 'Sprayers', icon: '💧' },
-  { id: 5, name: 'Threshers', icon: '🔄' },
-  { id: 6, name: 'Other Equipment', icon: '📦' },
-];
-
-const popularEquipment = [
+// Sample equipment data
+const allEquipment = [
   { id: 1, name: 'John Deere Tractor', type: 'Tractor', price: 1500, rating: 4.8, location: 'Punjab', availability: 'Available', image: '🚜' },
   { id: 2, name: 'Combine Harvester', type: 'Harvester', price: 2500, rating: 4.9, location: 'Haryana', availability: 'Available', image: '🌾' },
   { id: 3, name: 'Seed Drill', type: 'Seeding Equipment', price: 800, rating: 4.7, location: 'Rajasthan', availability: 'Available', image: '⚙️' },
   { id: 4, name: 'Sprayer Equipment', type: 'Spraying', price: 600, rating: 4.6, location: 'Maharashtra', availability: 'Unavailable', image: '💧' },
+  { id: 5, name: 'Power Thresher', type: 'Threshing', price: 1200, rating: 4.7, location: 'Delhi', availability: 'Available', image: '🔄' },
+  { id: 6, name: 'Rotavator', type: 'Cultivation', price: 900, rating: 4.5, location: 'Punjab', availability: 'Available', image: '⚙️' },
+  { id: 7, name: 'Disc Harrow', type: 'Soil Preparation', price: 700, rating: 4.6, location: 'Haryana', availability: 'Available', image: '📦' },
+  { id: 8, name: 'Pump Set', type: 'Irrigation', price: 500, rating: 4.8, location: 'Karnataka', availability: 'Available', image: '💧' },
 ];
 
-const stats = [
-  { number: '10,000+', label: 'Equipment Available' },
-  { number: '5,000+', label: 'Happy Farmers' },
-  { number: '50+', label: 'Cities Covered' },
-  { number: '₹5 Crore', label: 'Savings Made' },
-];
+export default function Equipment() {
+  const [filters, setFilters] = useState({});
+  const [equipment, setEquipment] = useState(allEquipment);
 
-export default function Home() {
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    let filtered = allEquipment;
+
+    if (newFilters.search) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(newFilters.search.toLowerCase()) ||
+        item.type.toLowerCase().includes(newFilters.search.toLowerCase())
+      );
+    }
+
+    if (newFilters.category) {
+      filtered = filtered.filter(item =>
+        item.type.toLowerCase().includes(newFilters.category.toLowerCase())
+      );
+    }
+
+    if (newFilters.location) {
+      filtered = filtered.filter(item =>
+        item.location.toLowerCase().includes(newFilters.location.toLowerCase())
+      );
+    }
+
+    setEquipment(filtered);
+  };
+
   return (
     <main>
       {/* Hero Section */}
-      <section className="hero">
+      <section className="equipment-hero">
         <div className="container hero-content">
-          <h1>Rent Agricultural Equipment Online</h1>
-          <p>Easy, affordable, and reliable equipment rental for farmers</p>
-          
-          <div className="search-section">
-            <input 
-              type="text" 
-              placeholder="Search for equipment..."
-            />
-          </div>
-
-          <div className="quick-actions">
-            <div className="action-card">
-              <div className="icon">🔍</div>
-              <h3>Browse Equipment</h3>
-              <p>Explore our wide range of farming equipment</p>
-              <Link href="/equipment">View All</Link>
-            </div>
-
-            <div className="action-card">
-              <div className="icon">📋</div>
-              <h3>My Rentals</h3>
-              <p>Track your current and past rentals</p>
-              <Link href="/my-rentals">View Rentals</Link>
-            </div>
-
-            <div className="action-card">
-              <div className="icon">💰</div>
-              <h3>Best Prices</h3>
-              <p>Save up to 70% compared to buying new</p>
-              <Link href="/equipment">Explore Deals</Link>
-            </div>
-          </div>
+          <h1 className="hero-title">Equipment Rental Marketplace</h1>
+          <p className="hero-subtitle">Find the perfect agricultural equipment for your farming needs</p>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="categories-section">
+      {/* Filter Section */}
+      <section className="section">
         <div className="container">
-          <h2 className="section-title">Shop by Category</h2>
-          
-          <div className="categories-grid">
-            {categories.map((category) => (
-              <div key={category.id} className="category-card">
-                <div className="category-icon">{category.icon}</div>
-                <p className="category-name">{category.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          <FilterBar onFilterChange={handleFilterChange} />
 
-      {/* Popular Equipment Section */}
-      <section className="popular-section">
-        <div className="container">
-          <h2 className="section-title">Popular Equipment</h2>
-          
-          <div className="equipment-showcase">
-            {popularEquipment.map((equipment) => (
-              <EquipmentCard key={equipment.id} {...equipment} />
-            ))}
+          {/* Results Count */}
+          <div style={{ marginBottom: '1.5rem', color: '#666' }}>
+            Showing {equipment.length} equipment
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <Link href="/equipment" className="btn-primary" style={{ display: 'inline-block', padding: '0.75rem 2rem' }}>
-              View All Equipment
-            </Link>
-          </div>
-        </div>
-      </section>
+          {/* Equipment Grid */}
+          {equipment.length > 0 ? (
+            <div className="equipment-grid">
+              {equipment.map((item) => (
+                <EquipmentCard key={item.id} {...item} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+              <h3>No equipment found</h3>
+              <p style={{ color: '#666', marginBottom: '2rem' }}>Try adjusting your filters</p>
+              <button 
+                className="btn-primary"
+                onClick={() => setEquipment(allEquipment)}
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
 
-      {/* Stats Section */}
-      <section className="stats-section">
-        <div className="container">
-          <div className="stats-grid">
-            {stats.map((stat, index) => (
-              <div key={index} className="stat-item">
-                <div className="stat-number">{stat.number}</div>
-                <div className="stat-label">{stat.label}</div>
-              </div>
-            ))}
+          {/* Pagination */}
+          <div className="pagination">
+            <button className="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>Next →</button>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="section section-white">
-        <div className="container text-center">
-          <h2>Ready to Rent?</h2>
-          <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-            Sign up today and get access to thousands of farming equipment across India
-          </p>
-          <Link href="/register" className="btn-primary" style={{ display: 'inline-block', padding: '0.75rem 2rem' }}>
-            Create Free Account
-          </Link>
         </div>
       </section>
     </main>
