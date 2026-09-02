@@ -1,0 +1,608 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FarmTech REST API Documentation</title>
+<style>
+@page { size: A4; margin: 16mm; }
+* { box-sizing: border-box; }
+body { color: #21352b; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.45; }
+h1 { color: #135c3d; font-size: 28pt; border-bottom: 4px solid #27ae60; padding-bottom: 8px; }
+h2 { color: #135c3d; font-size: 18pt; margin-top: 24px; border-bottom: 1px solid #cfe4d5; padding-bottom: 4px; }
+h3 { color: #246849; font-size: 13pt; margin-top: 18px; }
+h4 { color: #246849; font-size: 11pt; margin-bottom: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0 16px; page-break-inside: avoid; }
+th { background: #e8f5eb; color: #135c3d; text-align: left; }
+th, td { border: 1px solid #bcd8c4; padding: 6px 8px; vertical-align: top; }
+code { background: #f0f5f1; color: #185b3d; padding: 1px 4px; border-radius: 3px; font-family: Consolas, monospace; }
+pre { background: #f4f7f4; border-left: 4px solid #27ae60; padding: 10px; overflow-wrap: anywhere; white-space: pre-wrap; page-break-inside: avoid; }
+pre code { background: transparent; padding: 0; }
+li { margin: 3px 0; }
+</style></head><body><h1>FarmTech REST API Documentation</h1>
+<p><strong>Version:</strong> 1.0<br><strong>Base URL:</strong> <code>http://localhost:3000/api</code><br><strong>Content type:</strong> <code>application/json</code></p>
+<p>FarmTech provides APIs for account access, agricultural equipment discovery and management, and equipment rental bookings.</p>
+<h2>Contents</h2>
+<ol>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#conventions">Conventions</a></li>
+<li><a href="#endpoint-summary">Endpoint Summary</a></li>
+<li><a href="#endpoint-reference">Endpoint Reference</a></li>
+<li><a href="#data-models">Data Models</a></li>
+<li><a href="#error-reference">Error Reference</a></li>
+</ol>
+<h2>Getting Started</h2>
+<p>Start the application from the project root:</p>
+<pre><code class="language-bash">npm install
+npm run dev
+</code></pre>
+<p>The API is available at <code>http://localhost:3000/api</code>. The first request creates <code>data/farmtech.json</code> and seeds six equipment records. Run the automated API tests with:</p>
+<pre><code class="language-bash">npm test
+</code></pre>
+<h2>Authentication</h2>
+<p><code>GET /health</code>, <code>GET /equipment</code>, and <code>GET /equipment/:id</code> are public. All other endpoints require a bearer token.</p>
+<ol>
+<li>Call <code>POST /auth/register</code> or <code>POST /auth/login</code>.</li>
+<li>Read the <code>token</code> string from the response.</li>
+<li>Add this header to protected requests:</li>
+</ol>
+<pre><code class="language-http">Authorization: Bearer &lt;token&gt;
+</code></pre>
+<p>Passwords are stored as Node.js <code>scrypt</code> hashes. Tokens are random server-side session values and expire after seven days. Password hashes are never returned in API responses.</p>
+<h2>Conventions</h2>
+<h3>Request format</h3>
+<p>Send JSON request bodies with the <code>Content-Type: application/json</code> header. Dates use ISO calendar format <code>YYYY-MM-DD</code>. Equipment prices are positive numbers in Indian rupees per day.</p>
+<h3>Response format</h3>
+<p>Single resources are returned as JSON objects. Collections use:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: [],
+  &quot;count&quot;: 0
+}
+</code></pre>
+<p>Errors use:</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: {
+    &quot;message&quot;: &quot;Human-readable explanation&quot;
+  }
+}
+</code></pre>
+<h3>Status codes</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>200</code></td>
+<td>Request completed successfully</td>
+</tr>
+<tr>
+<td><code>201</code></td>
+<td>Resource created successfully</td>
+</tr>
+<tr>
+<td><code>400</code></td>
+<td>Invalid JSON or validation failure</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td>Authentication missing or invalid</td>
+</tr>
+<tr>
+<td><code>404</code></td>
+<td>Resource does not exist or is not owned by the caller</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td>Duplicate account or booking conflict</td>
+</tr>
+</tbody></table>
+<h2>Endpoint Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET</code></td>
+<td><code>/health</code></td>
+<td>No</td>
+<td>Check API availability</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/auth/register</code></td>
+<td>No</td>
+<td>Create an account and session</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/auth/login</code></td>
+<td>No</td>
+<td>Authenticate an existing account</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/equipment</code></td>
+<td>No</td>
+<td>Search and filter equipment</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/equipment/:id</code></td>
+<td>No</td>
+<td>Fetch one equipment item</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/equipment</code></td>
+<td>Yes</td>
+<td>Add equipment</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/equipment/:id</code></td>
+<td>Yes</td>
+<td>Update equipment</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/equipment/:id</code></td>
+<td>Yes</td>
+<td>Delete equipment</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/rentals</code></td>
+<td>Yes</td>
+<td>List the caller&#39;s rentals</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/rentals</code></td>
+<td>Yes</td>
+<td>Create a rental booking</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/rentals/:id</code></td>
+<td>Yes</td>
+<td>Fetch an owned rental</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/rentals/:id</code></td>
+<td>Yes</td>
+<td>Change rental status</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/rentals/:id</code></td>
+<td>Yes</td>
+<td>Delete an owned rental</td>
+</tr>
+</tbody></table>
+<h2>Endpoint Reference</h2>
+<h3>Health</h3>
+<h4><code>GET /health</code></h4>
+<p>Returns the current service status. No parameters or authentication are required.</p>
+<p><strong>Success <code>200</code>:</strong></p>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;service&quot;: &quot;farmtech-api&quot;,
+  &quot;timestamp&quot;: &quot;2026-09-02T12:00:00.000Z&quot;
+}
+</code></pre>
+<h3>Authentication</h3>
+<h4><code>POST /auth/register</code></h4>
+<p>Creates a customer account and returns a session token.</p>
+<p><strong>Request body:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>firstName</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>lastName</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must be a valid email; normalized to lowercase</td>
+</tr>
+<tr>
+<td><code>phone</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Minimum 8 characters</td>
+</tr>
+</tbody></table>
+<p><strong>Example request:</strong></p>
+<pre><code class="language-json">{
+  &quot;firstName&quot;: &quot;Asha&quot;,
+  &quot;lastName&quot;: &quot;Patel&quot;,
+  &quot;email&quot;: &quot;asha@example.com&quot;,
+  &quot;phone&quot;: &quot;+91 9876543210&quot;,
+  &quot;password&quot;: &quot;secure-pass-123&quot;
+}
+</code></pre>
+<p><strong>Success <code>201</code>:</strong></p>
+<pre><code class="language-json">{
+  &quot;user&quot;: {
+    &quot;id&quot;: &quot;uuid&quot;,
+    &quot;firstName&quot;: &quot;Asha&quot;,
+    &quot;lastName&quot;: &quot;Patel&quot;,
+    &quot;email&quot;: &quot;asha@example.com&quot;,
+    &quot;phone&quot;: &quot;+91 9876543210&quot;,
+    &quot;role&quot;: &quot;customer&quot;,
+    &quot;createdAt&quot;: &quot;2026-09-02T12:00:00.000Z&quot;
+  },
+  &quot;token&quot;: &quot;64-character-session-token&quot;
+}
+</code></pre>
+<p><strong>Possible errors:</strong> <code>400</code> invalid or missing fields; <code>409</code> email already registered.</p>
+<h4><code>POST /auth/login</code></h4>
+<p>Authenticates an existing account.</p>
+<p><strong>Request body:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>email</code></td>
+<td>string</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>string</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<p><strong>Example request:</strong></p>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;asha@example.com&quot;,
+  &quot;password&quot;: &quot;secure-pass-123&quot;
+}
+</code></pre>
+<p><strong>Success <code>200</code>:</strong> Returns <code>{ &quot;user&quot;: { ... }, &quot;token&quot;: &quot;...&quot; }</code> using the same user shape as registration.</p>
+<p><strong>Possible errors:</strong> <code>400</code> missing fields; <code>401</code> invalid email or password.</p>
+<h3>Equipment</h3>
+<h4><code>GET /equipment</code></h4>
+<p>Lists equipment and supports optional filtering.</p>
+<p><strong>Query parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>search</code></td>
+<td>string</td>
+<td>No</td>
+<td>Matches equipment name or type, case-insensitively</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td>string</td>
+<td>No</td>
+<td>Matches the location, case-insensitively</td>
+</tr>
+<tr>
+<td><code>availability</code></td>
+<td>string</td>
+<td>No</td>
+<td>Exact value: <code>available</code> or <code>unavailable</code></td>
+</tr>
+</tbody></table>
+<p><strong>Example:</strong> <code>GET /equipment?search=tractor&amp;location=Punjab&amp;availability=available</code></p>
+<p><strong>Success <code>200</code>:</strong></p>
+<pre><code class="language-json">{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;uuid&quot;,
+      &quot;name&quot;: &quot;John Deere Tractor&quot;,
+      &quot;type&quot;: &quot;Tractor&quot;,
+      &quot;pricePerDay&quot;: 1500,
+      &quot;rating&quot;: 4.8,
+      &quot;location&quot;: &quot;Punjab&quot;,
+      &quot;availability&quot;: &quot;available&quot;,
+      &quot;image&quot;: &quot;🚜&quot;,
+      &quot;owner&quot;: &quot;FarmTech Demo&quot;,
+      &quot;createdAt&quot;: &quot;2026-09-02T12:00:00.000Z&quot;,
+      &quot;updatedAt&quot;: &quot;2026-09-02T12:00:00.000Z&quot;
+    }
+  ],
+  &quot;count&quot;: 1
+}
+</code></pre>
+<h4><code>GET /equipment/:id</code></h4>
+<p>Returns one equipment item.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, equipment UUID.</p>
+<p><strong>Success <code>200</code>:</strong> Returns one equipment object. <strong>Possible error:</strong> <code>404</code> equipment not found.</p>
+<h4><code>POST /equipment</code></h4>
+<p>Creates equipment owned by the authenticated user.</p>
+<p><strong>Request body:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must not be blank</td>
+</tr>
+<tr>
+<td><code>pricePerDay</code></td>
+<td>number</td>
+<td>Yes</td>
+<td>Must be greater than zero</td>
+</tr>
+<tr>
+<td><code>availability</code></td>
+<td>string</td>
+<td>No</td>
+<td><code>available</code> by default; may be <code>unavailable</code></td>
+</tr>
+<tr>
+<td><code>image</code></td>
+<td>string</td>
+<td>No</td>
+<td>Defaults to <code>🚜</code></td>
+</tr>
+</tbody></table>
+<p><strong>Success <code>201</code>:</strong> Returns the newly created equipment object.</p>
+<p><strong>Possible errors:</strong> <code>400</code> invalid body or price; <code>401</code> authentication required.</p>
+<h4><code>PATCH /equipment/:id</code></h4>
+<p>Updates an equipment item. Authentication is required.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, equipment UUID.</p>
+<p><strong>Request body:</strong> A partial object containing only these fields: <code>name</code>, <code>type</code>, <code>location</code>, <code>pricePerDay</code>, <code>availability</code>, <code>image</code>. Unknown fields are rejected. When supplied, <code>pricePerDay</code> must be a positive number.</p>
+<p><strong>Success <code>200</code>:</strong> Returns the updated equipment object. <strong>Possible errors:</strong> <code>400</code> invalid fields; <code>401</code> unauthenticated; <code>404</code> equipment not found.</p>
+<h4><code>DELETE /equipment/:id</code></h4>
+<p>Deletes an equipment item.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, equipment UUID.</p>
+<p><strong>Success <code>200</code>:</strong></p>
+<pre><code class="language-json">{ &quot;message&quot;: &quot;Equipment deleted&quot; }
+</code></pre>
+<p><strong>Possible errors:</strong> <code>401</code> unauthenticated; <code>404</code> equipment not found.</p>
+<h3>Rentals</h3>
+<h4><code>GET /rentals</code></h4>
+<p>Lists rentals belonging only to the authenticated user. No query or body parameters.</p>
+<p><strong>Success <code>200</code>:</strong></p>
+<pre><code class="language-json">{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;uuid&quot;,
+      &quot;userId&quot;: &quot;uuid&quot;,
+      &quot;equipmentId&quot;: &quot;uuid&quot;,
+      &quot;equipmentName&quot;: &quot;John Deere Tractor&quot;,
+      &quot;startDate&quot;: &quot;2030-01-01&quot;,
+      &quot;endDate&quot;: &quot;2030-01-03&quot;,
+      &quot;days&quot;: 3,
+      &quot;total&quot;: 4500,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;createdAt&quot;: &quot;2026-09-02T12:00:00.000Z&quot;
+    }
+  ]
+}
+</code></pre>
+<p><strong>Possible error:</strong> <code>401</code> authentication required.</p>
+<h4><code>POST /rentals</code></h4>
+<p>Creates a pending booking and calculates the rental total from the equipment daily price.</p>
+<p><strong>Request body:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>equipmentId</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Must identify existing equipment</td>
+</tr>
+<tr>
+<td><code>startDate</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Valid date in <code>YYYY-MM-DD</code> format</td>
+</tr>
+<tr>
+<td><code>endDate</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Valid date on or after <code>startDate</code></td>
+</tr>
+</tbody></table>
+<p><strong>Example request:</strong></p>
+<pre><code class="language-json">{
+  &quot;equipmentId&quot;: &quot;equipment-uuid&quot;,
+  &quot;startDate&quot;: &quot;2030-01-01&quot;,
+  &quot;endDate&quot;: &quot;2030-01-03&quot;
+}
+</code></pre>
+<p><strong>Success <code>201</code>:</strong> Returns the rental object with <code>days: 3</code>, <code>total</code> equal to <code>days * pricePerDay</code>, and <code>status: &quot;pending&quot;</code>.</p>
+<p><strong>Possible errors:</strong> <code>400</code> missing/invalid fields or reversed dates; <code>401</code> unauthenticated; <code>404</code> equipment not found; <code>409</code> equipment unavailable or date range overlaps another pending, confirmed, or active rental.</p>
+<h4><code>GET /rentals/:id</code></h4>
+<p>Returns a rental owned by the authenticated user.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, rental UUID.</p>
+<p><strong>Success <code>200</code>:</strong> Returns one rental object. <strong>Possible errors:</strong> <code>401</code> unauthenticated; <code>404</code> rental not found or not owned by caller.</p>
+<h4><code>PATCH /rentals/:id</code></h4>
+<p>Changes the status of an owned rental.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, rental UUID.</p>
+<p><strong>Request body:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Allowed value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>status</code></td>
+<td>string</td>
+<td>Yes</td>
+<td><code>pending</code> or <code>cancelled</code></td>
+</tr>
+</tbody></table>
+<p><strong>Success <code>200</code>:</strong> Returns the updated rental object. <strong>Possible errors:</strong> <code>400</code> unsupported status; <code>401</code> unauthenticated; <code>404</code> rental not found or not owned by caller.</p>
+<h4><code>DELETE /rentals/:id</code></h4>
+<p>Deletes an owned rental.</p>
+<p><strong>Path parameter:</strong> <code>id</code> string, required, rental UUID.</p>
+<p><strong>Success <code>200</code>:</strong></p>
+<pre><code class="language-json">{ &quot;message&quot;: &quot;Rental deleted&quot; }
+</code></pre>
+<p><strong>Possible errors:</strong> <code>401</code> unauthenticated; <code>404</code> rental not found or not owned by caller.</p>
+<h2>Data Models</h2>
+<h3>User</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID string</td>
+</tr>
+<tr>
+<td><code>firstName</code>, <code>lastName</code>, <code>email</code>, <code>phone</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><code>customer</code></td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>ISO timestamp</td>
+</tr>
+</tbody></table>
+<h3>Equipment</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID string</td>
+</tr>
+<tr>
+<td><code>name</code>, <code>type</code>, <code>location</code>, <code>image</code>, <code>owner</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>pricePerDay</code>, <code>rating</code></td>
+<td>number</td>
+</tr>
+<tr>
+<td><code>availability</code></td>
+<td><code>available</code> or <code>unavailable</code></td>
+</tr>
+<tr>
+<td><code>createdAt</code>, <code>updatedAt</code></td>
+<td>ISO timestamp</td>
+</tr>
+</tbody></table>
+<h3>Rental</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code>, <code>userId</code>, <code>equipmentId</code></td>
+<td>UUID string</td>
+</tr>
+<tr>
+<td><code>equipmentName</code></td>
+<td>string snapshot</td>
+</tr>
+<tr>
+<td><code>startDate</code>, <code>endDate</code></td>
+<td><code>YYYY-MM-DD</code> string</td>
+</tr>
+<tr>
+<td><code>days</code>, <code>total</code></td>
+<td>number</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>pending</code>, <code>confirmed</code>, <code>active</code>, or <code>cancelled</code></td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>ISO timestamp</td>
+</tr>
+</tbody></table>
+<h2>Error Reference</h2>
+<p>All errors use the same envelope:</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: {
+    &quot;message&quot;: &quot;Equipment is already booked for these dates&quot;
+  }
+}
+</code></pre>
+<p>The API does not expose stack traces, password hashes, or internal database details to clients. The local JSON store can be relocated with the <code>FARMTECH_DB_FILE</code> environment variable.</p>
+</body></html>
